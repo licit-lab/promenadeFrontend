@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Promenade</title>
+    <meta charset="utf-8">
+    <link rel="icon" type="image/x-icon" href="https://www.unisannio.it/themes/custom/unisannio/images/xLogo_header.png.pagespeed.ic.foFV83ZeJD.webp">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="style/style.css" rel="stylesheet">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css" rel="stylesheet">
+    <script type="module" src="js/app_ws.js"></script>
+</head>
+
+<body>
+<header>
+    <img src="images/ding.png" alt="DING Logo" class="dingImage bannerImage">
+    <img src="images/logo-PROMENADE.png" alt="PROMENADE Logo" class="promenadeImage bannerImage">
+    <img src="images/licit2.png" alt="PROMENADE Logo" class="licitImage bannerImage">
+</header>
+<section>
+    <nav>
+<!--        <h3>Static Traffic</h3>-->
+<!--        <button type="button" class="button" id="staticTrafficButton" >Refresh</button>-->
+<!--        <br>-->
+        <h3>Observe Traffic</h3>
+        <button type="button" class="button" id="startTrafficButton" >Start</button>
+        <button type="button" class="button" id="stopTrafficButton" >Stop</button>
+
+        <br>
+        <h3>HeatMap</h3>
+        <button type="button" class="button" id="heatMapStaticButton" >Total</button>
+
+<!--        <button type="button" class="button" id="heatMapDynamicButton" >Dynamic</button>-->
+        ----
+        <button type="button" class="button" id="heatMapSnapshotButton" >Snapshot</button>
+        <label for="time-picker">Select a time:</label>
+        <input type="date" id="date-picker" disabled>
+        <input type="time" id="time-picker" name="appt" value="00:15" step="900">
+        <br>
+        <fieldset class="radio-button-menu">
+            <legend>Normalization strategy:</legend>
+            <div>
+                <input type="radio" id="global" name="radio-norm" value="global"> Global
+<!--                <label for="global">Global</label>-->
+            </div>
+            <div>
+                <input type="radio" id="viewport" name="radio-norm" value="viewport"> Viewport
+<!--                <label for="viewport">Viewport</label>-->
+            </div>
+            <div>
+                <input type="radio" id="area" name="radio-norm" value="area" checked> Area
+<!--                <label for="area">Area</label>-->
+            </div>
+        </fieldset>
+        <div id="legend-traffic" hidden>
+            <h4>Legend</h4>
+            <img src="images/Legend.png" alt="Legend" class="legendImage" id="legend-traffic-img">
+        </div>
+    </nav>
+    <div class="mapClass" id="map"></div>
+</section>
+
+<footer>
+    <p><b>Unisannio:</b> Carmine Colarusso, Antonio De Iasio, Lorenzo Goglia, Eugenio Zimeo</p>
+    <p><b>Licit:</b> Angelo Furno, Mohammed Amine Merzoug</p>
+</footer>
+
+</body>
+</html>
+
