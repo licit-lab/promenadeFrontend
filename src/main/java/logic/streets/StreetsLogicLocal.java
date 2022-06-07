@@ -9,7 +9,7 @@ import java.util.Set;
 
 @Local
 public interface StreetsLogicLocal {
-    public ArrayList<Street> getStreetsFromArea(String areaname, int zoom, int decimateSkip);
+    public ArrayList<Street> getStreetsFromArea(String areaname, int zoom, int decimateSkip, String epochTimestamp);
 
 
     public ArrayList<Street> getStreetsFromLinkIds(Set<Long> streetIdsSet);

@@ -12,15 +12,15 @@ import javax.ws.rs.core.Response;
 import java.util.*;
 
 @Path("/streets")
-public class StreetService implements StreetServiceAPI{
+public class StreetService implements StreetServiceAPI {
     @Inject
     private StreetsLogic streetsLogic;
 
 
     @Override
-    public Response searchStreets(String areaname, int zoom, String type, int decimateSkip, String upperLeft, String lowerRight) {
+    public Response searchStreets(String areaname, int zoom, String type, int decimateSkip, String upperLeft, String lowerRight, String epochTimestamp) {
         if (upperLeft == null && lowerRight == null) {
-            ArrayList<Street> streetsFromArea = streetsLogic.getStreetsFromArea(areaname, zoom, decimateSkip);
+            ArrayList<Street> streetsFromArea = streetsLogic.getStreetsFromArea(areaname, zoom, decimateSkip, epochTimestamp);
             if (type.equals("geojson")) {
                 FeatureCollection featureCollection = convertStreetsToFeatureCollection(streetsFromArea);
                 return MyResposeBuilder.createResponse(Response.Status.OK, featureCollection);
@@ -35,7 +35,7 @@ public class StreetService implements StreetServiceAPI{
             String[] lowerRightSplitted = lowerRight.split(",");
             float lowerRightLon = Float.parseFloat(lowerRightSplitted[1].trim());
             float lowerRightLat = Float.parseFloat(lowerRightSplitted[0].trim());
-            ArrayList<Street> streetsFromArea = streetsLogic.getStreetsFromArea(areaname, zoom, decimateSkip);
+            ArrayList<Street> streetsFromArea = streetsLogic.getStreetsFromArea(areaname, zoom, decimateSkip, epochTimestamp);
             streetsFromArea = filterStreets(streetsFromArea, upperLeftLon, upperLeftLat, lowerRightLon, lowerRightLat);
 
             if (type.equals("geojson")) {
@@ -48,7 +48,6 @@ public class StreetService implements StreetServiceAPI{
             return MyResposeBuilder.createResponse(Response.Status.INTERNAL_SERVER_ERROR, "Error");
         }
     }
-
 
 
     private ArrayList<Street> filterStreets(ArrayList<Street> streetsFromArea, float upperLeftLon, float upperLeftLat, float lowerRightLon, float lowerRightLat) {
@@ -92,10 +91,9 @@ public class StreetService implements StreetServiceAPI{
             Map<String, Object> properties = new HashMap<>();
             properties.put("name", s.getName());
             properties.put("id", s.getLinkId());
-            double fftt = s.getLenght() / s.getFfs();
-            properties.put("fftt", fftt);
+            properties.put("fftt", s.getFftt());
 //            properties.put("weight", fftt + ((Math.random() - 0.5) * 4 * fftt));
-            properties.put("weight", 0);
+            properties.put("weight", s.getWeight());
 //            if (s.getFfs() > 20)
 //                properties.put("color", "#1199dd");
 //            else {

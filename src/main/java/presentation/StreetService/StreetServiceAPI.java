@@ -13,7 +13,8 @@ public interface StreetServiceAPI {
                                   @DefaultValue ("street") @QueryParam("type") String type,
                                   @DefaultValue("0") @QueryParam("decimateSkip") int decimateSkip,
                                   @QueryParam("upperLeft") String upperLeft,
-                                  @QueryParam("lowerRight") String lowerRight);
+                                  @QueryParam("lowerRight") String lowerRight,
+                                  @QueryParam("timestamp") String epochTimestamp);
 
 
 

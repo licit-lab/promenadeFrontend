@@ -1,4 +1,5 @@
 package data;
+
 /**
  * Notifies an error  message if driver is not instantiated yet.
  * @author Giovanni Codianni

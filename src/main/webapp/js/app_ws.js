@@ -5,17 +5,14 @@ import "https://unpkg.com/@deck.gl/layers@^8.0.0/dist.min.js"
 
 const {MapboxLayer, ScatterplotLayer, ArcLayer, HeatmapLayer, GeoJsonLayer, LineLayer} = deck;
 
-// var baseURIRestArea = '/promenadeAreaNameService/rest/areaService/';
-// var baseURIRestRoadNetwork = '/promenadeAreaNameService/rest/areaService/';
+
 var promenadeBaseURI = '/promenade/rest/';
 // var restServerLocation = 'http://localhost:8080';
-// var restServerLocation = 'http://promenade-areaname-promenade-lyon.apps.kube.rcost.unisannio.it';
 var restServerLocation = window.location.protocol + '//' + window.location.host;
 const wsServerLocation = "ws://137.121.170.226:31700";
 // const wsServerLocation = "ws://127.0.0.1:8025";
 const wsEndpoint = "/ws/messages/out";
 
-// const endTimestamp = 1536192900;
 
 const map_div = document.getElementById("map")
 const staticTrafficButton = document.getElementById("staticTrafficButton")
@@ -28,27 +25,34 @@ const trafficLegendDiv = document.getElementById("legend-traffic")
 const datePicker = document.getElementById("date-picker")
 const timePicker = document.getElementById("time-picker")
 const radioNorm = document.getElementsByName("radio-norm")
+const overlapCheckbox = document.getElementById("overlap-box")
+const cleanMapButton = document.getElementById("cleanMapButton")
+const toggleAreas = document.getElementById("toggle-areas")
+
 
 datePicker.value = "2018-09-06"
 //------------------- Global variables
 
 const colormap = [
-    [49, 54, 149, 255],
-    [69, 117, 180, 255],
-    [116, 173, 209, 255],
-    [171, 217, 233, 255],
-    [224, 243, 248, 255],
-    [255, 255, 191, 255],
-    [254, 224, 144, 255],
-    [253, 174, 97, 255],
-    [244, 109, 67, 255],
+    [165, 0, 38, 255],
     [215, 48, 39, 255],
-    [165, 0, 38, 255]
+    [244, 109, 67, 255],
+    [253, 174, 97, 255],
+    [254, 224, 144, 255],
+    [255, 255, 191, 255],
+    [224, 243, 248, 255],
+    [171, 217, 233, 255],
+    [116, 173, 209, 255],
+    [69, 117, 180, 255],
+    [49, 54, 149, 255]
 ]
 const noDataColor = [102, 189, 99, 255]
 
 var socket = null;
-var mylayers = new Map();
+var myHeatmapLayers = new Map();
+var myTrafficLayers = new Map();
+var myPolygonLayers = new Map();
+
 
 //------------------- Map functions
 
@@ -64,23 +68,33 @@ let map = new mapboxgl.Map({
 
 function calculateColor(fftt, tt) {
     let index;
-    if (tt >= 2 * fftt) {
+    let ratio = fftt / tt;
+    if (ratio >= 1) {
         index = colormap.length - 1
     } else {
-        index = Math.max(0, (Math.ceil(tt / (2 * fftt) * colormap.length)) - 1)
+        index = Math.floor(ratio * (colormap.length - 1))
     }
+    console.log(fftt + ":" + tt + ":" + index)
+
     return colormap[index]
 }
 
-function cleanMap() {
+function cleanMap(cleanHeatmap, cleanTraffic) {
     trafficLegendDiv.setAttribute("hidden", "hidden");
-    mylayers.forEach(layer => {
-        console.log(layer)
-        map.removeLayer(layer.id)
-        // map.removeSource(layer.id)
-    })
-    mylayers = new Map()
-    console.log("Map cleaned!");
+    if (cleanHeatmap) {
+        myHeatmapLayers.forEach(layer => {
+            map.removeLayer(layer.id)
+        })
+        myHeatmapLayers = new Map()
+        console.log("Heatmap cleaned!");
+    }
+    if (cleanTraffic) {
+        myTrafficLayers.forEach(layer => {
+            map.removeLayer(layer.id)
+        })
+        myTrafficLayers = new Map()
+        console.log("Traffic cleaned!");
+    }
 }
 
 function createStreetLayer(id, data) {
@@ -88,26 +102,26 @@ function createStreetLayer(id, data) {
         id: id,
         type: GeoJsonLayer,
         data: data,
-        pickable: true,
+        // pickable: true,
         stroked: false,
         filled: true,
         extruded: true,
-        pointType: 'circle',
-        lineWidthScale: 5,
+        // pointType: 'circle',
+        lineWidthScale: 4,
         lineWidthMinPixels: 1,
-        getFillColor: [160, 160, 180, 200],
+        // getFillColor: [160, 160, 180, 200],
         getLineColor: d => calculateColor(d.properties.fftt, d.properties.weight),
-        getPointRadius: 100,
+        // getPointRadius: 100,
         getLineWidth: 1,
         getElevation: 30,
-        pointRadiusUnits: 'pixels',
+        // pointRadiusUnits: 'pixels',
     });
 }
 
 //------------------- Map data REST
 
 
-function populateAreasStatic(zoom, areas) {
+function populateStreetsPerAreasStatic(zoom, areas, timestamp) {
     var decimateSkip = 18 - zoom;
     if (zoom < 15)
         decimateSkip = 5 - zoom;
@@ -116,15 +130,15 @@ function populateAreasStatic(zoom, areas) {
     areas.forEach(area => {
         area = area.replace('-Northbound', '')
         console.log("area: " + area)
-        var streetUrl = restServerLocation + promenadeBaseURI + 'streets?areaname=' + area + '&zoom=' + zoom + '&type=geojson&decimateSkip=' + decimateSkip;
+        var streetUrl = restServerLocation + promenadeBaseURI + 'streets?areaname=' + area + '&zoom=' + zoom + '&type=geojson&decimateSkip=' + decimateSkip + "&timestamp=" + timestamp;
         var layerId = 'myGeoJsonLayer_' + area
         var layer = createStreetLayer(layerId, streetUrl);
-        mylayers.set(layerId, layer)
-        map.addLayer(layer)
+        myTrafficLayers.set(layerId, layer)
+        map.addLayer(layer, "aerialway")
     })
 }
 
-function drawStreetsStatic() {
+function drawStreetsStatic(timestamp) {
     var xhttp = new XMLHttpRequest(); // jshint ignore: line
     xhttp.contentType = "application/json";
     xhttp.onreadystatechange = function () {
@@ -134,9 +148,9 @@ function drawStreetsStatic() {
                 var areas = JSON.parse(xhttp.responseText);
                 var zoom = parseInt(map.getZoom())
                 // var allStreets = null
-                populateAreasStatic(zoom, areas);
+                populateStreetsPerAreasStatic(zoom, areas, timestamp);
             } else {
-                cleanMap();
+                cleanMap(true, true);
                 alert("Server cannot satisfy this request!");
             }
         }
@@ -158,36 +172,16 @@ function drawHeatmapStatic() {
         getWeight: d => d.betweenness,
         aggregation: 'SUM',
     })
-    map.addLayer(layer, "aerialway");
-    mylayers.set('heatmap', layer)
+    map.addLayer(layer, "poi-label");
+    myHeatmapLayers.set('heatmap', layer)
 }
 
 function populateHeatmapWithAreas(areas, normStrategy, endTimestamp) {
     console.log("in populate");
-    console.log(areas);
-    console.log(map)
-    var areaList = '';
-    areas.features.forEach(area => {
-        var areaname = area.properties.name;
-        areaList = areaList + areaname + ',';
-        var c1 = Math.floor(Math.random() * 255);
-        var c2 = Math.floor(Math.random() * 255);
-        var c3 = Math.floor(Math.random() * 255);
+    // console.log(areas);
+    // console.log(map)
 
-        var polygonLayer = new MapboxLayer({
-            type: GeoJsonLayer,
-            getFillColor: [c1, c2, c3, 0],
-            id: 'poligon_' + areaname,
-            lineWidthScale: 5,
-            lineWidthMinPixels: 1,
-            data: area,
-        })
-        map.addLayer(polygonLayer, "aerialway");
-        mylayers.set('poligon_' + areaname, polygonLayer)
-    });
-
-    areaList = areaList.slice(0, areaList.length - 1);
-    console.log("AreaList: " + areaList);
+    // console.log("AreaList: " + areaList);
     var xhttp = new XMLHttpRequest(); // jshint ignore: line
     xhttp.contentType = "application/json";
     xhttp.onreadystatechange = function () {
@@ -209,18 +203,17 @@ function populateHeatmapWithAreas(areas, normStrategy, endTimestamp) {
                         aggregation: 'MEAN',
                     })
                     map.addLayer(heatmapLayer, "aerialway");
-                    mylayers.set('heatmap_' + areaname, heatmapLayer)
+                    myHeatmapLayers.set('heatmap_' + areaname, heatmapLayer)
                 });
             } else {
-                cleanMap();
+                cleanMap(true, true);
                 alert("Server cannot satisfy this request!");
             }
         }
     };
-    var url = restServerLocation + promenadeBaseURI + 'intersections/betweenness/?endTimestamp=' + endTimestamp + '&areas=' + areaList + '&normStrategy=' + normStrategy;
+    var url = restServerLocation + promenadeBaseURI + 'intersections/betweenness/?endTimestamp=' + endTimestamp + '&areas=' + areas + '&normStrategy=' + normStrategy;
     xhttp.open('GET', url, true);
     xhttp.send();
-
 
 
 }
@@ -231,16 +224,16 @@ function drawHeatmapSnapshot(areaAggregationMode, time) {
     xhttp.onreadystatechange = function () {
         if (xhttp.readyState === XMLHttpRequest.DONE) {
             if (xhttp.status === 200) {
-                // console.log("response: " + this.responseText);
                 var areas = JSON.parse(xhttp.responseText);
+                console.log("areas: " + areas);
                 populateHeatmapWithAreas(areas, areaAggregationMode, time)
             } else {
-                cleanMap();
+                cleanMap(true, true);
                 alert("Server cannot satisfy this request!");
             }
         }
     };
-    var url = restServerLocation + promenadeBaseURI + 'areas?upperLeft=' + map.getBounds().getNorth() + ',' + map.getBounds().getWest() + '&lowerRight=' + map.getBounds().getSouth() + ',' + map.getBounds().getEast() + '&mode=geojson';
+    var url = restServerLocation + promenadeBaseURI + 'areas?upperLeft=' + map.getBounds().getNorth() + ',' + map.getBounds().getWest() + '&lowerRight=' + map.getBounds().getSouth() + ',' + map.getBounds().getEast() + '&mode=name';
     xhttp.open('GET', url, true);
     xhttp.send();
 }
@@ -338,7 +331,7 @@ function initializeWebSocket() {
             //     getElevation: 30,
             //     pointRadiusUnits: 'pixels',
             // });
-            mylayers.set(layerId, layer2)
+            myTrafficLayers.set(layerId, layer2)
             map.addLayer(layer2)
         }
     });
@@ -363,11 +356,11 @@ function populateAreasDynamic(zoom, areas) {
                         var layerId = 'areaLayer_' + area;
                         var layer = createStreetLayer(layerId, featureCollection)
                         console.log(layer)
-                        mylayers.set(layerId, layer)
+                        myTrafficLayers.set(layerId, layer)
                         map.addLayer(layer)
                     }
                 } else {
-                    cleanMap();
+                    cleanMap(true, true);
                     alert("Server cannot satisfy this request!");
                 }
             }
@@ -380,14 +373,24 @@ function populateAreasDynamic(zoom, areas) {
 
 //------------------- Button Listeners
 
-/*staticTrafficButton.addEventListener('click', ev => {
+staticTrafficButton.addEventListener('click', ev => {
         console.log("staticTrafficButton clicked")
         closeWebSocket()
-        cleanMap()
-        drawStreetsStatic();
+        if (overlapCheckbox.checked) {
+            cleanMap(false, true);
+        }else{
+            cleanMap(true, true);
+        }
+        // TODO
+        var date = datePicker.value
+        var time = timePicker.value
+        var d = new Date(date + " " + time); // Your timezone!
+        var endTimestamp = d.getTime() / 1000.0;
+        // console.log(endTimestamp)
+        drawStreetsStatic(endTimestamp);
     }
-)*/
-
+)
+/*
 heatMapStaticButton.addEventListener('click', ev => {
         console.log("staticTrafficButton clicked")
         closeWebSocket()
@@ -395,6 +398,7 @@ heatMapStaticButton.addEventListener('click', ev => {
         drawHeatmapStatic();
     }
 )
+ */
 /*heatMapDynamicButton.addEventListener('click', ev => {
         console.log("dinamicTrafficButton clicked")
         closeWebSocket()
@@ -406,7 +410,11 @@ heatMapStaticButton.addEventListener('click', ev => {
 heatMapSnapshotButton.addEventListener('click', ev => {
         console.log("heatMapSnapshotButton clicked")
         closeWebSocket()
-        cleanMap()
+        if (overlapCheckbox.checked) {
+            cleanMap(true, false)
+        }else{
+            cleanMap(true, true)
+        }
         var date = datePicker.value
         var time = timePicker.value
 
@@ -428,7 +436,7 @@ heatMapSnapshotButton.addEventListener('click', ev => {
 
 startTrafficButton.addEventListener('click', ev => {
     closeWebSocket()
-    cleanMap()
+    cleanMap(true, true)
     trafficLegendDiv.removeAttribute("hidden");
     initializeWebSocket()
 
@@ -443,7 +451,7 @@ startTrafficButton.addEventListener('click', ev => {
                 var zoom = parseInt(map.getZoom())
                 populateAreasDynamic(zoom, areas);
             } else {
-                cleanMap();
+                cleanMap(true, true);
                 alert("Server cannot satisfy this request!");
             }
         }
@@ -461,7 +469,60 @@ startTrafficButton.addEventListener('click', ev => {
 
 })
 
+cleanMapButton.addEventListener('click', ev => {
+    closeWebSocket();
+    cleanMap(true, true);
+});
+
 stopTrafficButton.addEventListener('click', ev => {
     closeWebSocket()
-})
+});
 
+
+toggleAreas.addEventListener('change', ev => {
+    if(toggleAreas.checked) {
+        console.log('Areas on!')
+        var xhttp = new XMLHttpRequest(); // jshint ignore: line
+        xhttp.contentType = "application/json";
+        xhttp.onreadystatechange = function () {
+            if (xhttp.readyState === XMLHttpRequest.DONE) {
+                if (xhttp.status === 200) {
+                    // console.log("response: " + this.responseText);
+                    var areas = JSON.parse(xhttp.responseText);
+                    var areaList = '';
+                    areas.features.forEach(area => {
+                        var areaname = area.properties.name;
+                        areaList = areaList + areaname + ',';
+                        // var c1 = Math.floor(Math.random() * 255);
+                        // var c2 = Math.floor(Math.random() * 255);
+                        // var c3 = Math.floor(Math.random() * 255);
+
+                        var polygonLayer = new MapboxLayer({
+                            type: GeoJsonLayer,
+                            // getFillColor: [c1, c2, c3, 0],
+                            getFillColor: [0, 0, 0, 0],
+                            id: 'poligon_' + areaname,
+                            lineWidthScale: 5,
+                            lineWidthMinPixels: 1,
+                            data: area,
+                        })
+                        map.addLayer(polygonLayer, "poi-label");
+                        myPolygonLayers.set('poligon_' + areaname, polygonLayer)
+                    });
+                } else {
+                    cleanMap(true, true);
+                    alert("Server cannot satisfy this request!");
+                }
+            }
+        };
+        var url = restServerLocation + promenadeBaseURI + 'areas?upperLeft=' + map.getBounds().getNorth() + ',' + map.getBounds().getWest() + '&lowerRight=' + map.getBounds().getSouth() + ',' + map.getBounds().getEast() + '&mode=geojson';
+        xhttp.open('GET', url, true);
+        xhttp.send();
+    }else{
+        myPolygonLayers.forEach(layer => {
+            map.removeLayer(layer.id)
+        })
+        myPolygonLayers = new Map()
+        console.log("Areas off!");
+    }
+})

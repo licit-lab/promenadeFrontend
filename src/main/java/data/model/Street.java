@@ -18,6 +18,7 @@ public class Street {
 	private String routeNumber;
 	private long fow;
 
+	private double fftt;
 
 	/**
 	 * 
@@ -46,6 +47,7 @@ public class Street {
 		this.netClass = netClass;
 		this.routeNumber = routeNumber;
 		this.fow = fow;
+		this.fftt = (lenght / ffs) * 3.6;
 	}
 
 	public ArrayList<Coordinate> getGeometry() {
@@ -160,6 +162,14 @@ public class Street {
 		this.fow = fow;
 	}
 
+	public double getFftt() {
+		return fftt;
+	}
+
+	public void setFftt(double fftt) {
+		this.fftt = fftt;
+	}
+
 	@Override
 	public String toString() {
 		return "Street{" +
@@ -177,6 +187,7 @@ public class Street {
 				", netClass=" + netClass +
 				", routeNumber='" + routeNumber + '\'' +
 				", fow=" + fow +
+				", fftt=" + fftt +
 				'}';
 	}
 }

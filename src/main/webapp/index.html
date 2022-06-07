@@ -3,7 +3,8 @@
 <head>
     <title>Promenade</title>
     <meta charset="utf-8">
-    <link rel="icon" type="image/x-icon" href="https://www.unisannio.it/themes/custom/unisannio/images/xLogo_header.png.pagespeed.ic.foFV83ZeJD.webp">
+    <link rel="icon" type="image/x-icon"
+          href="https://www.unisannio.it/themes/custom/unisannio/images/xLogo_header.png.pagespeed.ic.foFV83ZeJD.webp">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="style/style.css" rel="stylesheet">
     <link href="https://api.mapbox.com/mapbox-gl-js/v2.4.1/mapbox-gl.css" rel="stylesheet">
@@ -18,39 +19,54 @@
 </header>
 <section>
     <nav>
-<!--        <h3>Static Traffic</h3>-->
-<!--        <button type="button" class="button" id="staticTrafficButton" >Refresh</button>-->
-<!--        <br>-->
-        <h3>Observe Traffic</h3>
-        <button type="button" class="button" id="startTrafficButton" >Start</button>
-        <button type="button" class="button" id="stopTrafficButton" >Stop</button>
-
-        <br>
-        <h3>HeatMap</h3>
-        <button type="button" class="button" id="heatMapStaticButton" >Total</button>
-
-<!--        <button type="button" class="button" id="heatMapDynamicButton" >Dynamic</button>-->
-        ----
-        <button type="button" class="button" id="heatMapSnapshotButton" >Snapshot</button>
-        <label for="time-picker">Select a time:</label>
-        <input type="date" id="date-picker" disabled>
-        <input type="time" id="time-picker" name="appt" value="00:15" step="900">
-        <br>
-        <fieldset class="radio-button-menu">
-            <legend>Normalization strategy:</legend>
-            <div>
-                <input type="radio" id="global" name="radio-norm" value="global"> Global
-<!--                <label for="global">Global</label>-->
-            </div>
-            <div>
-                <input type="radio" id="viewport" name="radio-norm" value="viewport"> Viewport
-<!--                <label for="viewport">Viewport</label>-->
-            </div>
-            <div>
-                <input type="radio" id="area" name="radio-norm" value="area" checked> Area
-<!--                <label for="area">Area</label>-->
-            </div>
+        <fieldset>
+            <legend>Real Time</legend>
+            <button type="button" class="button" id="startTrafficButton">Traffic</button>
+            <button type="button" class="disabled-button" id="startHeatmapButton">BC</button>
+            <button type="button" class="button" id="stopTrafficButton">Stop</button>
         </fieldset>
+        <br>
+        <fieldset>
+            <legend>Historical Data</legend>
+            <label for="time-picker">Select a time:</label>
+            <input type="date" id="date-picker" disabled>
+            <input type="time" id="time-picker" name="appt" value="00:15" step="900">
+            <br>
+            ---
+            <button type="button" class="button" id="staticTrafficButton">Traffic</button>
+            ---
+            <button type="button" class="button" id="heatMapSnapshotButton">BC</button>
+            <fieldset>
+                <legend>Heatmap Normalization:</legend>
+                <div class="radio-button-menu">
+                    <div>
+                        <input type="radio" id="global" name="radio-norm" value="global">
+                        <label for="global">Global</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="viewport" name="radio-norm" value="viewport">
+                        <label for="viewport">Viewport</label>
+                    </div>
+                    <div>
+                        <input type="radio" id="area" name="radio-norm" value="area" checked>
+                        <label for="area">Area</label>
+                    </div>
+                </div>
+            </fieldset>
+            --- <br>
+            <input type="checkbox" id="overlap-box">
+            <label for="overlap-box">Overlap</label>
+        </fieldset>
+        <br>
+
+        <label class="switch">
+            <input type="checkbox" id="toggle-areas">
+            <span class="slider round"></span>
+        </label>
+        Areas
+
+        <button type="button" class="button" id="cleanMapButton">Clean Map</button>
+
         <div id="legend-traffic" hidden>
             <h4>Legend</h4>
             <img src="images/Legend.png" alt="Legend" class="legendImage" id="legend-traffic-img">

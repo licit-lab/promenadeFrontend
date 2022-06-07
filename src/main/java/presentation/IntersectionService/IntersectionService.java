@@ -1,19 +1,17 @@
 package presentation.IntersectionService;
 
 import data.model.Intersection;
-import data.mongo.MongoAreaDAO;
-import data.mongo.MongoConnectionManager;
 import logic.intersections.IntersectionLogicLocal;
 import presentation.MyResposeBuilder;
 
-import javax.annotation.PostConstruct;
+
 import javax.inject.Inject;
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 
 @Path("/intersections")
-public class IntersectionService implements IntersectionServiceApi{
+public class IntersectionService implements IntersectionServiceApi {
     //TODO change DAO
     @Inject
     private IntersectionLogicLocal intersectionLogic;

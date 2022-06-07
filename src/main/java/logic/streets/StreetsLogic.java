@@ -1,8 +1,10 @@
 package logic.streets;
 
 import data.model.Coordinate;
-import data.model.Intersection;
 import data.model.Street;
+import data.mongo.MongoAreaDAO;
+import data.mongo.MongoConnectionManager;
+import data.mongo.MongoStreetDAO;
 import data.neo4j.Neo4jRoadNetworkDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,8 @@ public class StreetsLogic implements StreetsLogicLocal {
     ConfigurationSingleton conf = ConfigurationSingleton.getInstance();
     private static final Logger logger = LoggerFactory.getLogger(StreetsLogic.class);
     Neo4jRoadNetworkDAO database;
+    MongoConnectionManager connectionManager;
+    MongoStreetDAO streetDAO;
 
 //    public RoadNetworkLogic(){
 //        String uri = conf.getProperty("neo4j-core.bolt-uri");
@@ -35,6 +39,11 @@ public class StreetsLogic implements StreetsLogicLocal {
         database = new Neo4jRoadNetworkDAO(uri, user, password);
         logger.info("TrafficMonitoringService.connect");
         database.openConnection();
+        String hostname = conf.getProperty("mongo.hostname");
+        String port = conf.getProperty("mongo.port");
+        String database = conf.getProperty("mongo.database.streets.name");
+        connectionManager = new MongoConnectionManager(hostname, port, database);
+        streetDAO = new MongoStreetDAO(connectionManager);
     }
 
 //    /**
@@ -58,11 +67,19 @@ public class StreetsLogic implements StreetsLogicLocal {
     }
 
     @Override
-    public ArrayList<Street> getStreetsFromArea(String areaname, int zoom, int decimateSkip) {
+    public ArrayList<Street> getStreetsFromArea(String areaname, int zoom, int decimateSkip, String epochTimestamp) {
 
         ArrayList<Street> streets = database.getStreetsFromArea(areaname, zoom);
         if (decimateSkip > 0) {
             decimateStreets(streets, decimateSkip);
+        }
+        if (epochTimestamp == null) {
+            for(Street s : streets){
+                s.setWeight(s.getFftt());
+            }
+        }else{
+            Long endTimestamp = Long.parseLong(epochTimestamp);
+            streetDAO.updateWeightValue(streets, areaname, endTimestamp);
         }
         return streets;
     }

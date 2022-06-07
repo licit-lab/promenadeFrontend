@@ -17,8 +17,6 @@ import java.util.HashMap;
 
 
 public class MongoBetweennesDAO implements BetweennessDAO {
-    public static final long START_REF_EPOCH = 1536184800;
-    public static final long BETWEENNESS_CALCUALTION_DELTA = 900;
 
     ConfigurationSingleton conf = ConfigurationSingleton.getInstance();
     private final MongoConnectionManager connectionManager;
@@ -41,7 +39,7 @@ public class MongoBetweennesDAO implements BetweennessDAO {
             intersectionMapCollection.put(areaName, intersectionMap);
             MongoCollection<Document> collection = connectionManager.getDatabase().getCollection(areaName + "-BC");
             int n = intersections.size();
-            int skip = (int) ((((endTimestamp - START_REF_EPOCH) / BETWEENNESS_CALCUALTION_DELTA) - 1) * n);
+            int skip = (int) ((((endTimestamp - MongoParams.START_REF_EPOCH) / MongoParams.BETWEENNESS_CALCUALTION_DELTA) - 1) * n);
             FindIterable<Document> iterable = collection.find().sort(Sorts.ascending("_id")).skip(skip).limit(n);
 //            documentsMap.put(areaName, iterable);
             double max = -1;
@@ -86,7 +84,7 @@ public class MongoBetweennesDAO implements BetweennessDAO {
                     if (name.endsWith("-BC")) {
                         MongoCollection<Document> collection = connectionManager.getDatabase().getCollection(name);
                         int n = allAreas.get(name.substring(0, name.length()-3)).getNodes();
-                        int skip = (int) ((((endTimestamp - START_REF_EPOCH) / BETWEENNESS_CALCUALTION_DELTA) - 1) * n);
+                        int skip = (int) ((((endTimestamp - MongoParams.START_REF_EPOCH) / MongoParams.BETWEENNESS_CALCUALTION_DELTA) - 1) * n);
                         FindIterable<Document> iterable = collection.find().sort(Sorts.ascending("_id")).skip(skip).limit(n);
                         for (Document d : iterable) {
                             double bc = Double.parseDouble(d.getString("bc"));
