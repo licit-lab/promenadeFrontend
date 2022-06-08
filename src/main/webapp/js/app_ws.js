@@ -7,9 +7,9 @@ const {MapboxLayer, ScatterplotLayer, ArcLayer, HeatmapLayer, GeoJsonLayer, Line
 
 
 var promenadeBaseURI = '/promenade/rest/';
-var restServerLocation = 'http://localhost:8080';
+// var restServerLocation = 'http://localhost:8080';
 // var restServerLocation = 'http://promenade-areaname-promenade-lyon.apps.kube.rcost.unisannio.it';
-// var restServerLocation = window.location.protocol + '//' + window.location.host;
+var restServerLocation = window.location.protocol + '//' + window.location.host;
 const wsServerLocation = "ws://137.121.170.226:31700";
 // const wsServerLocation = "ws://127.0.0.1:8025";
 const wsEndpoint = "/ws/messages/out";
