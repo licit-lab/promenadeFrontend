@@ -20,7 +20,7 @@ p {
 .myHeader {
     position: absolute;
     top: 0;
-    max-height: 12vh;
+    max-height: 10vh;
     width: 97vw;
     display: grid;
     grid-template-columns: auto 45vw auto;
@@ -34,23 +34,24 @@ p {
 
 .headerImage {
     width: 100%;
-    max-height: 12vh;
-    object-fit: cover;
+    max-height: 9vh;
+    /*width: auto;*/
+    object-fit: contain;
 }
 
 .myContent{
     position: absolute;
-    top: 13vh;
-    height: 84vh;
-    width: 100vw;
+    top: 10vh;
+    height: 87vh;
+    width: 99.5vw;
     display: grid;
     grid-template-columns: 16vw auto;
-    grid-column-gap: 0.5vw;
+    grid-column-gap: 1vw;
     grid-template-rows: auto;
     text-align: center;
     /*align-items: center;*/
     /*color: white;*/
-    padding: 0 0 0 0;
+    padding: 0 0 0 0.5vw;
 }
 
 .commandMenu{
@@ -66,15 +67,16 @@ p {
 
 
 /* Style the footer */
-footer {
+.myFooter {
     position: absolute;
-    bottom: 0;
+    /*bottom: 0;*/
     height: 3vh;
     width: 100vw;
-    /*top: 90vh;*/
+    top: 97vh;
     background: #3e8e41;
+
     /*background-color: #777;*/
-    /*padding: 0.5vw;*/
+    /*margin-top: 1px;*/
     text-align: left;
     color: white;
 }
@@ -82,9 +84,10 @@ footer {
 
 .button{
     width: 100%;
-    height: 4vh;
+    height: 3.5vh;
     margin-bottom: 0.5vh;
     margin-top: 0.5vh;
+    left: 0.5vw;
 
     border: none;
     color: white;
@@ -99,7 +102,9 @@ footer {
     align-items: center;
     text-align: center;
     align-content: center;
-    padding: 0.5vh 0.5vh 0.5vh 0.5vh;
+    padding: 0.5vh 1vh 0.5vh 1vh;
+    margin-top: 0.5vh;
+    margin-left: 0;
     width: 90%;
 }
 
@@ -129,8 +134,9 @@ footer {
 }
 
 .legendImage {
-    max-width: 100%;
-    max-height: 30vh;
+    width: 100%;
+    max-height: 10vh;
+    object-fit: contain;
 }
 
 h4 {
