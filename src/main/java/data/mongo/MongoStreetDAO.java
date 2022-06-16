@@ -36,7 +36,7 @@ public class MongoStreetDAO {
         }
         MongoCollection<Document> collection = connectionManager.getDatabase().getCollection(areaName + "-Northbound");
 
-        Bson match = match(and(gt("domainAggTimestamp", (endTimestamp - MongoParams.TRAVELTIME_CALCUALTION_DELTA) * 1000),
+        Bson match = match(and(gte("domainAggTimestamp", (endTimestamp - MongoParams.TRAVELTIME_CALCUALTION_DELTA) * 1000),
                 lt("domainAggTimestamp", endTimestamp * 1000)));
         Bson project = project(fields(excludeId(), include("linkid", "avgTravelTime")));
         Bson group = group("$linkid", avg("aggregatedTT", "$avgTravelTime"));

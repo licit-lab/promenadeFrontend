@@ -310,7 +310,7 @@ function initializeWebSocket() {
         var tt = parseFloat(event.data.match("(avgTravelTime=)([0-9\.]+)")[2])
 
         var layerId = 'areaLayer_' + areaname
-        var layer = mylayers.get(layerId)
+        var layer = myTrafficLayers.get(layerId)
         var featureCollection = layer.props.data.features
         var flag = false
         for (let feature of featureCollection) {
