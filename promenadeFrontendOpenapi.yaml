@@ -1,45 +1,63 @@
 openapi: 3.0.3
 info:
   title: Promenade Area Name Service
-  description: Promenade Area Name Service
+  description: Promenade REST API exposed by map backend
   version: 1.0.0
 servers:
   - url: 'http://promenade-area-name-promenade-area.router.default.svc.cluster.local/promenade/rest/'
+  - url: 'http://promenade-frontend-promenade-lyon.apps.kube.rcost.unisannio.it/promenade/rest'
 paths:
   /areas:
     get:
       tags:
-        - "Area"
-      summary: "Area Name in square"
+        - "Map Backend"
+      summary: "Areas in viewport"
       description: |
-        Find all area name that are present in a square given upper-left and lower-right corners.
+        Finds all area names in a rectangle identified by the coordinates of upper-left and lower-right corners.
       parameters:
         - name: "upperLeft"
-          description: upper-left square cohordiantes in Decimal Degrees (DD) formatted as 'longitude,latutude'
+          description: upper-left square coordinates in Decimal Degrees (DD) formatted as 'longitude,latutude'
           schema:
             type: "string"
+            example: '45.75571810833597,4.818260863693183'
           required: true
           in: "query"
         - name: "lowerRight"
-          description: lower-right square cohordiantes in Decimal Degrees (DD) formatted as 'longitude,latutude'
+          description: lower-right square coordinates in Decimal Degrees (DD) formatted as 'longitude,latutude'
           schema:
             type: "string"
+            example: '45.7434252148189,4.835105136306765'
+          required: true
+          in: "query"
+        - name: "mode"
+          description: specify response object type. Allowed values are ['geojson', 'name']
+          schema:
+            type: "string"
+            enum:
+              - 'geojson'
+              - 'name'
+            example: 'geojson'
           required: true
           in: "query"
       responses:
         '200':
-          description: "OK. numero di contribuenti"
+          description: "OK. If query param mode is set to 'name' response is a list of area names, otherwise if it set to 'geojson' response is a [FeatureCollection](https://www.rfc-editor.org/rfc/rfc7946#section-3.3) object of [GeoJSON Specification](https://www.rfc-editor.org/rfc/rfc7946) containing a list of [GeoJSON Polygon](https://www.rfc-editor.org/rfc/rfc7946#section-3.1.6)"
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  description: areaNames
-                  type: string
+                oneOf:
+                  - type: array
+                    items:
+                      description: areaName
+                      type: string
+                  - type: object
+                    description: FeatureCollection
+                example: ["La_Mulatiere","Lyon_2e_Arrondissement","Lyon_5e_Arrondissement","Lyon_7e_Arrondissement"]
+
   /streets:
     get:
       tags:
-        - "Area"
+        - "Map Backend"
       summary: "Streets in Area "
       description: |
         Find all street with given area name.
@@ -47,17 +65,111 @@ paths:
         - name: "areaname"
           schema:
             type: "string"
+            example: 'Lyon_2e_Arrondissement'
+          required: true
+          in: "query"
+        - name: "zoom"
+          schema:
+            type: "integer"
+            description: 'Specify map zoom level, it goest from 1 to 18. It is used to filter street importance. Zoom level 18 stands for nearest zoom, in this case system returns all street. With lower zoom level system returns only the most importants street such as highways'
+            example: 15
+          required: true
+          in: "query"
+        - name: "type"
+          schema:
+            type: "string"
+            default: 'streets'
+            enum:
+              - 'streets'
+              - 'geojson'
+          required: false
+          in: "query"
+        - name: "decimateSkip"
+          description: 'Street polyline approxiamtion param, if set to 0 endoind returns streets with maximium resolution otherwise polyline is returned with hops of decimateskip interval'
+          schema:
+            type: "integer"
+            default: 0
+          required: false
+          in: "query"
+        - name: "timestamp"
+          description: 'timestamp in epoch format'
+          schema:
+            type: "integer"
+            example: 1536185700
+          required: true
+          in: "query"
+        - name: "upperLeft"
+          description: upper-left square coordinates in Decimal Degrees (DD) formatted as 'longitude,latutude'
+          schema:
+            type: "string"
+          required: false
+          in: "query"
+        - name: "lowerRight"
+          description: lower-right square coordinates in Decimal Degrees (DD) formatted as 'longitude,latutude'
+          schema:
+            type: "string"
+          required: false
+          in: "query"
+      responses:
+        '200':
+          description: "OK. If query param type is set to 'streets' response is a JSON array of Streets objects, otherwise if it set to 'geojson' response is a [FeatureCollection](https://www.rfc-editor.org/rfc/rfc7946#section-3.3) object of [GeoJSON Specification](https://www.rfc-editor.org/rfc/rfc7946) containing a list of [GeoJSON LineString](https://www.rfc-editor.org/rfc/rfc7946#section-3.1.4) "
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: array
+                    description: JSON array of Streets objects
+                    items:
+                      $ref: '#/components/schemas/Street'
+                  - type: object
+                    description: FeatureCollection
+  /intersections/betweenness/:
+    get:
+      tags:
+        - "Map Backend"
+      summary: "Intersections in Areas with betweenness"
+      description: |
+        Find all intersection with given area names.
+      parameters:
+        - name: "areas"
+          description: 'comma separated list of area names'
+          schema:
+            type: "string"
+            example: 'La_Mulatiere,Lyon_2e_Arrondissement,Lyon_5e_Arrondissement,Lyon_7e_Arrondissement'
+          required: true
+          in: "query"
+        - name: "endTimestamp"
+          description: 'timestamp in epoch format'
+          schema:
+            type: "integer"
+            example: 1536185700
+          required: true
+          in: "query"
+        - name: "normStrategy"
+          description: "Normalization strategy. Betweenness value in response is normalized using three possible 
+          strategies ['area', 'wiewport', 'global']. Values are divided by the max BC value in each area 
+          ('area' startegy), all the areas falling within the viewport ('viewport' strategy) 
+          or all the areas of the city ('global' strategy)"
+          schema:
+            type: "string"
+            enum:
+              - 'area'
+              - 'viewport'
+              - 'global'
+            default: 'area'
           required: true
           in: "query"
       responses:
         '200':
-          description: "OK. A list of Streets"
+          description: "OK. "
           content:
             application/json:
               schema:
                 type: array
+                description: JSON array of Streets objects
                 items:
-                  $ref: '#/components/schemas/Street'
+                  $ref: '#/components/schemas/Intersection'
+
 components:
   schemas:
     Coordinate:
@@ -90,7 +202,22 @@ components:
           description: free flow speed [Km/h]
           type: number
         coordinates:
-          description: link geometry, ordered list of coordinates
+          description: street geometry, ordered list of coordinates
+          type: array
+          items:
+            $ref: '#/components/schemas/Coordinate'
+    Intersection:
+      type: object
+      properties:
+        osmid:
+          description: Intersection OpenStreetMap id
+          type: integer
+        betweenness:
+          type: number
+        areaName:
+          type: string
+        coordinate:
+          description: street geometry, ordered list of coordinates
           type: array
           items:
             $ref: '#/components/schemas/Coordinate'
